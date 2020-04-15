@@ -38,7 +38,8 @@ version = str(20180602)
 main_URL = 'https://api.foursquare.com/v2/'
 
 
-# TODO:missing url_from_users and url_from_tips...
+# TODO: missing url_from_users and url_from_tips...
+# TODO: explore, trending in option
 # Classes
 ##########################################################################
 '''
@@ -55,20 +56,25 @@ class Link(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-    def url_from_venue(self):
-        self.option = str(self.option) + '/search?'
+    def venue(self):
+        self.option = '/' + self.option + '?'
         self.location = 'll=' + self.location
         self.query = '&query=' + self.query
-        return (str(main_URL+self.option+self.location+self.query+'&client_id='+client_id+'&client_secret='+client_secret+'&v='+version))
+        url = str(main_URL+'venues'+self.option+self.location+self.query+'&client_id='+client_id+'&client_secret='+client_secret+'&v='+version)
+        return (url)
 
 
-
-coffeeNY = Link(option='venues', location='40.7,-74', query='coffee').url_from_venue()
+# Search example
+coffeeNY = Link(option='search', location='40.7,-74', query='coffee').venue()
 print(coffeeNY)
 
+# explore example
+exploreNY = Link(option='explore', location='40.7,-74', query='coffee').venue()
+print(exploreNY)
 
-
-
+# FIXME: trending example
+# trendingNY = Link(option='trending', location='40.7,-74', query='coffee').venue()
+# print(trendingNY)
 
 
 # Section_Sample
