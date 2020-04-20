@@ -12,7 +12,22 @@ Retrieving data from foursquare's API:
 '''
 
 from pathlib import Path
+
+# working with json and tranforming json file into a pandas dataframe library
 import json
+from pandas.io.json import json_normalize
+
+import requests # library to handle requests
+import pandas as pd # library for data analsysis
+import numpy as np # library to handle data in a vectorized manner
+import random # library for random number generation
+
+from geopy.geocoders import Nominatim # module to convert an address into latitude and longitude values
+
+# libraries for displaying images
+from IPython.display import Image 
+from IPython.core.display import HTML 
+import folium # plotting library
 
 # Get credentials from json file
 #########################################################################
