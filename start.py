@@ -63,8 +63,29 @@ class Link() -> generates a link to query the json file out of foursquare's API:
         option,         venues
         location,       as: latitud, longitud
         query           as: coffee, chinese food, windsurf...
+
+examples:
+    Specific venue category:
+    + venues/ + option + ? + client_id= + CLIENT_ID + &client_secret= + CLIENT_SECRET + &ll= + LOCATION + &query= + QUERY + &radius= + RADIUS + &limit=  + LIMIT
+    - 'https://api.foursquare.com/v2/venues/search?client_id=P1YQAFRAQSNTLIX1ZSRRLUDXB2JGT0KPNSPGFBWXOMBVL4X4&client_secret=HEADURYPNTU24PWKRJADVLS5OMSOU0XKKN4H5F4E5YYFUZJ1&ll=40.7149555,-74.0153365&v=20180604&query=Italian&radius=500&limit=30'
+
+    Explore a given venue:
+    + venues/ + ID + ? + client_id= + CLIENT_ID + &client_secret= + CLIENT_SECRET 
+    - 'https://api.foursquare.com/v2/venues/4fa862b3e4b0ebff2f749f06?client_id=P1YQAFRAQSNTLIX1ZSRRLUDXB2JGT0KPNSPGFBWXOMBVL4X4&client_secret=HEADURYPNTU24PWKRJADVLS5OMSOU0XKKN4H5F4E5YYFUZJ1&v=20180604'
+
+    Get the venue tips:
+    + venues/ + ID + tips + ? + CLIENT_ID + &client_secret= + CLIENT_SECRET
+    - https://api.foursquare.com/v2/venues/VENUE_ID/tips?client_id=CLIENT_ID&client_secret=CLIENT_SECRET&v=VERSION&limit=LIMIT
+
+    Search a user:
+    + users/ + ID + ? + CLIENT_ID + &client_secret= + CLIENT_SECRET
+    - https://api.foursquare.com/v2/users/USER_ID?client_id=CLIENT_ID&client_secret=CLIENT_SECRET&v=VERSION
+
+    Search tips from a given user:
+    + users/ + ID + /tips + ? + client_id= + CLIENT_ID + &client_secret= + CLIENT_SECRET + &v= + VERSION + &limit= + LIMIT
+    - https://api.foursquare.com/v2/users/{}/tips?client_id={}&client_secret={}&v={}&limit={}'.format(user_id, CLIENT_ID, CLIENT_SECRET, VERSION, limit)
 '''
-class Link(object):
+class Link:
 
     global main_URL, client_id, client_secret, version
 
@@ -78,13 +99,21 @@ class Link(object):
         url = str(main_URL+'venues'+self.option+self.location+self.query+'&client_id='+client_id+'&client_secret='+client_secret+'&v='+version)
         return (url)
 
+    # TODO: Finish it...
+    def explore(self):
+        self.option = '/' + self.option + '?'
+        self.location = 'll=' + self.location
+        self.query = '&query=' + self.query
+        url = str(main_URL+'venues'+self.option+self.location+self.query+'&client_id='+client_id+'&client_secret='+client_secret+'&v='+version)
+        return (url)
+
 
 # Search example
 coffeeNY = Link(option='search', location='40.7,-74', query='coffee').venue()
 print(coffeeNY)
 
 # explore example
-exploreNY = Link(option='explore', location='40.7,-74', query='coffee').venue()
+exploreNY = Link(option='explore', location='40.7,-74', query='coffee').explore()
 print(exploreNY)
 
 # FIXME: trending example
