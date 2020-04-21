@@ -110,16 +110,72 @@ class Link:
 
 # Search example
 coffeeNY = Link(option='search', location='40.7,-74', query='coffee').venue()
-print(coffeeNY)
+# print(coffeeNY)
 
 # explore example
 exploreNY = Link(option='explore', location='40.7,-74', query='coffee').explore()
-print(exploreNY)
+# print(exploreNY)
 
 # FIXME: trending example
 # trendingNY = Link(option='trending', location='40.7,-74', query='coffee').venue()
 # print(trendingNY)
 
+
+# Request and view information from url
+###############################################################
+'''
+Import data of Toronto, clean it and assign it to postal codes for later continue with clustering
+'''
+
+url = 'https://en.wikipedia.org/wiki/List_of_postal_codes_of_Canada:_M'
+
+# Let's import, clear and rename the data frame
+series_of_dataframes = pd.read_html(url)    # import raw data
+df_first = series_of_dataframes[0]          # first dataframe from sereies of dataframes
+
+# Select not assigned (na)
+# na_nan_series = (df_first['Borough']=='Not assigned') & (df_first['Neighborhood'].isnull())
+na_series = df_first['Borough']=='Not assigned'
+
+# define clear of na's dataframe
+df = df_first[na_series==False].rename(columns={'Postal code': 'PostalCode'})
+# print (df.head())
+
+# let's continue and separate them with comma as asked
+df['Neighborhood'] = df['Neighborhood'].str.replace('/', ',')
+# print ('Dataframe now comma-separated\n', df.head())
+
+# !cat ../data/Geospatial_Coordinates.csv
+geo_df = pd.read_csv('./data/Geospatial_Coordinates.csv')
+geo_df = geo_df.rename(columns={'Postal Code': 'PostalCode'})
+
+geo_df = df.merge(geo_df, how='outer', on='PostalCode')
+# print (geo_df)
+
+
+# Test data from request
+###############################################################
+
+# print (geo_df.iloc[0])
+'''
+PostalCode             M3A
+Borough         North York
+Neighborhood     Parkwoods
+Latitude           43.7533
+Longitude         -79.3297
+Name: 0, dtype: object
+'''
+location1 = str(str(geo_df.iloc[0]['Latitude']) + ',' + str(geo_df.iloc[0]['Longitude']))
+# print (location1)
+
+sportTO = Link(option='venues', location=location1, query='sport').venue()
+# print (sportTO)
+
+# results = requests.get(url).json()
+results = requests.get(sportTO).json()
+# print (results)
+# Pretty printing:
+print (json.dumps(results, sort_keys=True, indent=2))
 
 # Section_Sample
 ###############################################################
