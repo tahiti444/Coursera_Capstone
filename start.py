@@ -95,11 +95,15 @@ class Link:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-    def venue(self):
+    def venue(self, **kwargs):
         self.option = '/' + self.option + '?'
         self.location = 'll=' + self.location
         self.query = '&query=' + self.query
         url = str(main_URL+'venues'+self.option+self.location+self.query+'&client_id='+client_id+'&client_secret='+client_secret+'&v='+version)
+        # kwargs should have the same name as in Foursquare
+        for key, value in kwargs.items():
+            append = '&' + key + '=' + str(value)
+            url = url + append
         return (url)
 
     # TODO: Finish it...
@@ -191,7 +195,7 @@ location1 = str(str(geo_df.iloc[0]['Latitude']) + ',' + str(geo_df.iloc[0]['Long
 # print (location1)
 
 # sportTO = Link(option='search', location=location1, query='sport').venue()
-sportTO = Link(option='search', location=location1, query='Gym').venue()
+sportTO = Link(option='search', location=location1, query='Gym').venue(limit=80)
 # print (sportTO)
 
 # results = requests.get(url).json()
