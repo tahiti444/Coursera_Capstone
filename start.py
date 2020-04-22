@@ -29,6 +29,9 @@ from IPython.display import Image
 from IPython.core.display import HTML 
 import folium # plotting library
 
+# regex
+import re
+
 # Get credentials from json file
 #########################################################################
 wksPath = Path(__file__).parents[0]
@@ -108,6 +111,25 @@ class Link:
         return (url)
 
 
+# function to avoid generating testing variables:
+def view_json(var):
+    var = json.dumps(var, sort_keys=True, indent=2)
+    return print (var)
+
+# function that extracts the category of the venue
+def get_category_type(row):
+    try:
+        categories_list = row['categories']
+    except:
+        categories_list = row['venue.categories']
+        
+    if len(categories_list) == 0:
+        return None
+    else:
+        return categories_list[0]['name']
+
+
+
 # Search example
 coffeeNY = Link(option='search', location='40.7,-74', query='coffee').venue()
 # print(coffeeNY)
@@ -168,14 +190,48 @@ Name: 0, dtype: object
 location1 = str(str(geo_df.iloc[0]['Latitude']) + ',' + str(geo_df.iloc[0]['Longitude']))
 # print (location1)
 
-sportTO = Link(option='venues', location=location1, query='sport').venue()
+# sportTO = Link(option='search', location=location1, query='sport').venue()
+sportTO = Link(option='search', location=location1, query='Gym').venue()
 # print (sportTO)
 
 # results = requests.get(url).json()
 results = requests.get(sportTO).json()
 # print (results)
+
 # Pretty printing:
-print (json.dumps(results, sort_keys=True, indent=2))
+json_string = json.dumps(results, sort_keys=True, indent=2)
+# print (json_string)
+
+# generate a python variable to access data:
+jdata = json.loads(json_string)
+# print (type(jdata))           # -> dictionary
+
+
+
+# TestData
+###############################################################
+jdata = jdata['response']['venues']
+# view_json(jdata)              # object of a self-made function which prints json beautified!
+
+# lets import this data into pandas
+df = json_normalize(jdata)
+# print (df.columns)
+# print (df.head())
+
+# keep only columns that include venue name, and anything that is associated with location
+filtered_columns = ['name', 'categories'] + [col for col in df.columns if col.startswith('location.')] + ['id']
+df_filtered = df.loc[:, filtered_columns]
+
+# rename_columns, whitout 'location.'
+df_filtered = df_filtered.rename(columns=lambda x: re.sub('location.','',x))
+
+# filter the category for each row
+df_filtered['categories'] = df_filtered.apply(get_category_type, axis=1)
+print (df_filtered.columns)
+print (df_filtered.shape)
+print (df_filtered.head(50))
+
+
 
 # Section_Sample
 ###############################################################
