@@ -5,10 +5,18 @@ Retrieving data from foursquare's API:
                                     /users
                                     /tips
     - needs to pass:
-        + ID
-        + Secret ID
-        + Version (usufull for controling your app)
+        + Class Link
+    - Read from external json file API_ID_Keys
+    - Exercise: Load data from Neighborhoods and mathing them with postal codes
+    - Request to FS API about:
+        + Coffee
+        + Library
+        + study
+        + party (optional)
+    - transform request into json format
+    - generatation of a map
 
+    TODO: Build a cluster
 '''
 
 from pathlib import Path
@@ -56,9 +64,9 @@ version = str(20180602)
 main_URL = 'https://api.foursquare.com/v2/'
 
 
-# TODO: missing url_from_users and url_from_tips...
+# TODO: missing functions: Link.user() and Link.tip()...
 # TODO: explore, trending in option
-# Classes
+# Classes---
 ##########################################################################
 '''
 class Link() -> generates a link to query the json file out of foursquare's API:
@@ -66,27 +74,6 @@ class Link() -> generates a link to query the json file out of foursquare's API:
         option,         venues
         location,       as: latitud, longitud
         query           as: coffee, chinese food, windsurf...
-
-examples:
-    Specific venue category:
-    + venues/ + option + ? + client_id= + CLIENT_ID + &client_secret= + CLIENT_SECRET + &ll= + LOCATION + &query= + QUERY + &radius= + RADIUS + &limit=  + LIMIT
-    - 'https://api.foursquare.com/v2/venues/search?client_id=P1YQAFRAQSNTLIX1ZSRRLUDXB2JGT0KPNSPGFBWXOMBVL4X4&client_secret=HEADURYPNTU24PWKRJADVLS5OMSOU0XKKN4H5F4E5YYFUZJ1&ll=40.7149555,-74.0153365&v=20180604&query=Italian&radius=500&limit=30'
-
-    Explore a given venue:
-    + venues/ + ID + ? + client_id= + CLIENT_ID + &client_secret= + CLIENT_SECRET 
-    - 'https://api.foursquare.com/v2/venues/4fa862b3e4b0ebff2f749f06?client_id=P1YQAFRAQSNTLIX1ZSRRLUDXB2JGT0KPNSPGFBWXOMBVL4X4&client_secret=HEADURYPNTU24PWKRJADVLS5OMSOU0XKKN4H5F4E5YYFUZJ1&v=20180604'
-
-    Get the venue tips:
-    + venues/ + ID + tips + ? + CLIENT_ID + &client_secret= + CLIENT_SECRET
-    - https://api.foursquare.com/v2/venues/VENUE_ID/tips?client_id=CLIENT_ID&client_secret=CLIENT_SECRET&v=VERSION&limit=LIMIT
-
-    Search a user:
-    + users/ + ID + ? + CLIENT_ID + &client_secret= + CLIENT_SECRET
-    - https://api.foursquare.com/v2/users/USER_ID?client_id=CLIENT_ID&client_secret=CLIENT_SECRET&v=VERSION
-
-    Search tips from a given user:
-    + users/ + ID + /tips + ? + client_id= + CLIENT_ID + &client_secret= + CLIENT_SECRET + &v= + VERSION + &limit= + LIMIT
-    - https://api.foursquare.com/v2/users/{}/tips?client_id={}&client_secret={}&v={}&limit={}'.format(user_id, CLIENT_ID, CLIENT_SECRET, VERSION, limit)
 '''
 class Link:
 
@@ -133,13 +120,14 @@ def get_category_type(row):
         return categories_list[0]['name']
 
 
-
+# Examples of queries:
+#################################################################
 # Search example
-coffeeNY = Link(option='search', location='40.7,-74', query='coffee').venue()
+# coffeeNY = Link(option='search', location='40.7,-74', query='coffee').venue()
 # print(coffeeNY)
 
 # explore example
-exploreNY = Link(option='explore', location='40.7,-74', query='coffee').explore()
+# exploreNY = Link(option='explore', location='40.7,-74', query='coffee').explore()
 # print(exploreNY)
 
 # FIXME: trending example
@@ -179,23 +167,15 @@ geo_df = df.merge(geo_df, how='outer', on='PostalCode')
 # print (geo_df)
 
 
-# Test data from request
+# Make a request and convert it to json data
 ###############################################################
+locationTO = str(str(geo_df.iloc[0]['Latitude']) + ',' + str(geo_df.iloc[0]['Longitude']))
+lonTO = geo_df.iloc[0]['Longitude']
+latTO = geo_df.iloc[0]['Latitude']
+# lonTO = 43.727        # --> Real Center
+# latTO = -79.373       # --> Real Center
 
-# print (geo_df.iloc[0])
-'''
-PostalCode             M3A
-Borough         North York
-Neighborhood     Parkwoods
-Latitude           43.7533
-Longitude         -79.3297
-Name: 0, dtype: object
-'''
-location1 = str(str(geo_df.iloc[0]['Latitude']) + ',' + str(geo_df.iloc[0]['Longitude']))
-# print (location1)
-
-# sportTO = Link(option='search', location=location1, query='sport').venue()
-sportTO = Link(option='search', location=location1, query='Gym').venue(limit=80)
+sportTO = Link(option='search', location=locationTO, query='Gym').venue(limit=80)
 # print (sportTO)
 
 # results = requests.get(url).json()
@@ -210,10 +190,6 @@ json_string = json.dumps(results, sort_keys=True, indent=2)
 jdata = json.loads(json_string)
 # print (type(jdata))           # -> dictionary
 
-
-
-# TestData
-###############################################################
 jdata = jdata['response']['venues']
 # view_json(jdata)              # object of a self-made function which prints json beautified!
 
@@ -222,6 +198,34 @@ df = json_normalize(jdata)
 # print (df.columns)
 # print (df.head())
 
+# Import from API up to 80 venues about sport in Toronto
+###############################################################
+'''
+Info about Foursquare Sand Box Account:
+    - The Foursquare API has a limit of:
+        + 950 Regular API Calls per day and 
+        + 50 Premium API Calls per day for Sandbox Tier Accounts.
+
+Example: (more info: https://developer.foursquare.com/docs/places-api/getting-started/)
+
+import json, requests
+url = 'https://api.foursquare.com/v2/venues/explore'
+
+params = dict(
+    client_id='CLIENT_ID',
+    client_secret='CLIENT_SECRET',
+    v='20180323',
+    ll='40.7243,-74.0018',
+    query='coffee',
+    limit=1
+    )
+
+resp = requests.get(url=url, params=params)
+data = json.loads(resp.text)
+'''
+
+# Pandas data preparing:
+#################################################################
 # keep only columns that include venue name, and anything that is associated with location
 filtered_columns = ['name', 'categories'] + [col for col in df.columns if col.startswith('location.')] + ['id']
 df_filtered = df.loc[:, filtered_columns]
@@ -231,9 +235,33 @@ df_filtered = df_filtered.rename(columns=lambda x: re.sub('location.','',x))
 
 # filter the category for each row
 df_filtered['categories'] = df_filtered.apply(get_category_type, axis=1)
-print (df_filtered.columns)
-print (df_filtered.shape)
-print (df_filtered.head(50))
+
+# Coordinates for map centering:
+#################################################################
+# FIXME: Problem with folium... lets itself not force to some manually tipped location inputs
+
+# latTO = 43.727
+# lonTO = -79.373
+for lat in df_filtered['lat']:
+    if (43.729 > lat > 43.726):
+        latcenterTo = lat
+        break
+    else:
+        pass
+
+for lng in df_filtered['lng']:
+    if -79.374 < lng < -79.371:
+        lngcenterTo = lng
+        break
+
+# generate map centered on the middle of Toronto:
+#################################################################
+# mapTO = folium.Map(location=[latTO, lonTO], zoom_start=13)
+mapTO = folium.Map(location=[latcenterTo, lngcenterTo], zoom_start=12)
+mapTO.save('index.html')
+
+
+
 
 
 
