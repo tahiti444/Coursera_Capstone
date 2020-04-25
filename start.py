@@ -102,7 +102,9 @@ class Link:
         return (url)
 
 
-# function to avoid generating testing variables:
+# Functions:
+#################################################################
+# function to avoid generating testing variables of json indenxed files (only for test):
 def view_json(var):
     var = json.dumps(var, sort_keys=True, indent=2)
     return print (var)
@@ -119,20 +121,30 @@ def get_category_type(row):
     else:
         return categories_list[0]['name']
 
+# function to pass a link and get a request and a json data out of it
+def get_df(link):
+    results = requests.get(link).json()
+    # print (results)
+    # Pretty printing:
+    json_string = json.dumps(results, sort_keys=True, indent=2)
+    # print(json_string)
+    # generate a python variable to access data:
+    jdata = json.loads(json_string)
+    jdata = jdata['response']['venues']
+    # jdata = jdata['response']['groups']
+    # view_json(jdata)              # object of a self-made function which prints json beautified!
+    # lets import this data into pandas
+    dataframe = json_normalize(jdata)
+    # print (df.columns)
+    # print (df.head())
+    return dataframe
 
-# Examples of queries:
-#################################################################
-# Search example
-# coffeeNY = Link(option='search', location='40.7,-74', query='coffee').venue()
-# print(coffeeNY)
-
-# explore example
-# exploreNY = Link(option='explore', location='40.7,-74', query='coffee').explore()
-# print(exploreNY)
-
-# FIXME: trending example
-# trendingNY = Link(option='trending', location='40.7,-74', query='coffee').venue()
-# print(trendingNY)
+# keep only columns that include venue name, and anything that is associated with location
+def filter_df(dataframe):
+    filtered_columns = ['name', 'categories'] + [col for col in dataframe.columns if col.startswith('location.')] + ['id']
+    dataframe = dataframe.loc[:, filtered_columns]  
+    dataframe = dataframe.rename(columns=lambda x: re.sub('location.','',x))
+    return dataframe
 
 
 # Request and view information from url
@@ -169,101 +181,68 @@ geo_df = df.merge(geo_df, how='outer', on='PostalCode')
 
 # Make a request and convert it to json data
 ###############################################################
-locationTO = str(str(geo_df.iloc[0]['Latitude']) + ',' + str(geo_df.iloc[0]['Longitude']))
-lonTO = geo_df.iloc[0]['Longitude']
-latTO = geo_df.iloc[0]['Latitude']
-# lonTO = 43.727        # --> Real Center
-# latTO = -79.373       # --> Real Center
+# locationTO = str(str(geo_df.iloc[0]['Latitude']) + ',' + str(geo_df.iloc[0]['Longitude']))
+# lonTO = geo_df.iloc[0]['Longitude']
+# latTO = geo_df.iloc[0]['Latitude']
+latTO = 43.727        # --> Real Center
+lonTO = -79.373       # --> Real Center
+locationTO = str(str(latTO) + ',' + str(lonTO))
 
-sportTO = Link(option='search', location=locationTO, query='Gym').venue(limit=80)
-# print (sportTO)
 
-# results = requests.get(url).json()
-results = requests.get(sportTO).json()
-# print (results)
+coffeeTO = Link(option='search', location=locationTO, query='coffee').venue(radius=5000,limit=80) # radius in meters?
+libraryTO = Link(option='search', location=locationTO, query='library').venue(radius=5000,limit=80) # radius in meters?
+studyTO = Link(option='search', location=locationTO, query='study').venue(radius=5000,limit=80) # radius in meters?
 
-# Pretty printing:
-json_string = json.dumps(results, sort_keys=True, indent=2)
-# print (json_string)
+df_coffee = get_df(coffeeTO)
+df_library = get_df(libraryTO)
+df_study = get_df(studyTO)
 
-# generate a python variable to access data:
-jdata = json.loads(json_string)
-# print (type(jdata))           # -> dictionary
-
-jdata = jdata['response']['venues']
-# view_json(jdata)              # object of a self-made function which prints json beautified!
-
-# lets import this data into pandas
-df = json_normalize(jdata)
-# print (df.columns)
-# print (df.head())
-
-# Import from API up to 80 venues about sport in Toronto
-###############################################################
-'''
-Info about Foursquare Sand Box Account:
-    - The Foursquare API has a limit of:
-        + 950 Regular API Calls per day and 
-        + 50 Premium API Calls per day for Sandbox Tier Accounts.
-
-Example: (more info: https://developer.foursquare.com/docs/places-api/getting-started/)
-
-import json, requests
-url = 'https://api.foursquare.com/v2/venues/explore'
-
-params = dict(
-    client_id='CLIENT_ID',
-    client_secret='CLIENT_SECRET',
-    v='20180323',
-    ll='40.7243,-74.0018',
-    query='coffee',
-    limit=1
-    )
-
-resp = requests.get(url=url, params=params)
-data = json.loads(resp.text)
-'''
 
 # Pandas data preparing:
 #################################################################
 # keep only columns that include venue name, and anything that is associated with location
-filtered_columns = ['name', 'categories'] + [col for col in df.columns if col.startswith('location.')] + ['id']
-df_filtered = df.loc[:, filtered_columns]
-
-# rename_columns, whitout 'location.'
-df_filtered = df_filtered.rename(columns=lambda x: re.sub('location.','',x))
+df_coffee = filter_df(df_coffee)
+df_library = filter_df(df_library)
+df_study = filter_df(df_study)
 
 # filter the category for each row
-df_filtered['categories'] = df_filtered.apply(get_category_type, axis=1)
-
-# Coordinates for map centering:
-#################################################################
-# FIXME: Problem with folium... lets itself not force to some manually tipped location inputs
-
-# latTO = 43.727
-# lonTO = -79.373
-for lat in df_filtered['lat']:
-    if (43.729 > lat > 43.726):
-        latcenterTo = lat
-        break
-    else:
-        pass
-
-for lng in df_filtered['lng']:
-    if -79.374 < lng < -79.371:
-        lngcenterTo = lng
-        break
+df_coffee['categories'] = df_coffee.apply(get_category_type, axis=1)
+df_library['categories'] = df_library.apply(get_category_type, axis=1)
+df_study['categories'] = df_study.apply(get_category_type, axis=1)
 
 # generate map centered on the middle of Toronto:
 #################################################################
-# mapTO = folium.Map(location=[latTO, lonTO], zoom_start=13)
-mapTO = folium.Map(location=[latcenterTo, lngcenterTo], zoom_start=12)
-mapTO.save('index.html')
+mapTO = folium.Map(location=[latTO, lonTO], zoom_start=12)
+# mapTO.save('index.html')
+
+'''
+# instantiate a feature group for the incidents in the dataframe
+incidents = folium.map.FeatureGroup()
+
+# loop through the 100 crimes and add each to the incidents feature group
+for lat, lng, in zip(df_incidents.latitude, df_incidents.longitude):
+    incidents.add_child(
+        folium.features.CircleMarker(
+            [lat, lng],
+            radius=5, # define how big you want the circle markers to be
+            color='yellow',
+            fill=True,
+            fill_color='blue',
+            fill_opacity=0.6
+        )
+    )
+
+# add incidents to map
+sanfran_map.add_child(incidents)
+'''
 
 
 
 
 
 
-# Section_Sample
-###############################################################
+
+
+
+
+
