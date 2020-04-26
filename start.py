@@ -184,8 +184,10 @@ geo_df = df.merge(geo_df, how='outer', on='PostalCode')
 # locationTO = str(str(geo_df.iloc[0]['Latitude']) + ',' + str(geo_df.iloc[0]['Longitude']))
 # lonTO = geo_df.iloc[0]['Longitude']
 # latTO = geo_df.iloc[0]['Latitude']
-latTO = 43.727        # --> Real Center
-lonTO = -79.373       # --> Real Center
+# latTO = 43.727        # --> Real Center
+# lonTO = -79.373       # --> Real Center
+latTO = 43.6813         # --> Old city Center
+lonTO = -79.4003        # --> Old city Center
 locationTO = str(str(latTO) + ',' + str(lonTO))
 
 
@@ -213,28 +215,53 @@ df_study['categories'] = df_study.apply(get_category_type, axis=1)
 # generate map centered on the middle of Toronto:
 #################################################################
 mapTO = folium.Map(location=[latTO, lonTO], zoom_start=12)
-# mapTO.save('index.html')
 
-'''
 # instantiate a feature group for the incidents in the dataframe
-incidents = folium.map.FeatureGroup()
+coffees = folium.map.FeatureGroup()
+libraries = folium.map.FeatureGroup()
+studies = folium.map.FeatureGroup()
 
-# loop through the 100 crimes and add each to the incidents feature group
-for lat, lng, in zip(df_incidents.latitude, df_incidents.longitude):
-    incidents.add_child(
-        folium.features.CircleMarker(
-            [lat, lng],
+# loop through the coffees
+for latitude, longitude, in zip(df_coffee.lat, df_coffee.lng):
+    coffees.add_child(
+        folium.CircleMarker(
+            [latitude, longitude],
             radius=5, # define how big you want the circle markers to be
-            color='yellow',
+            color='black',
             fill=True,
             fill_color='blue',
             fill_opacity=0.6
         )
     )
+# loop through the libraries
+for latitude, longitude, in zip(df_library.lat, df_library.lng):
+    libraries.add_child(
+        folium.CircleMarker(
+            [latitude, longitude],
+            radius=5, # define how big you want the circle markers to be
+            color='black',
+            fill=True,
+            fill_color='red',
+            fill_opacity=0.6
+        )
+    )
+# loop through the studies
+for latitude, longitude, in zip(df_study.lat, df_study.lng):
+    studies.add_child(
+        folium.CircleMarker(
+            [latitude, longitude],
+            radius=5, # define how big you want the circle markers to be
+            color='black',
+            fill=True,
+            fill_color='green',
+            fill_opacity=0.6
+        )
+    )
 
-# add incidents to map
-sanfran_map.add_child(incidents)
-'''
+mapTO.add_child(coffees)
+mapTO.add_child(libraries)
+mapTO.add_child(studies)
+mapTO.save('index.html')
 
 
 
