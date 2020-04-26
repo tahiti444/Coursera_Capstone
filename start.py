@@ -190,7 +190,8 @@ Procedure:
 u_list = {
     'Borough': '',
     'Latitude': 0.0,
-    'Longitude': 0.0
+    'Longitude': 0.0,
+    'Position': ''
 }
 boroughs_mean_pos = pd.DataFrame(columns=u_list)
 for borough in geo_df['Borough'].unique():
@@ -199,15 +200,17 @@ for borough in geo_df['Borough'].unique():
     x=borough
     y=df_inter['Latitude'].mean()
     z=df_inter['Longitude'].mean()
+    p=str(str(y) + ',' + str(z))
     u_list = {
         'Borough': x,
         'Latitude': y,
-        'Longitude': z
+        'Longitude': z,
+        'Position': p
     }
     u_list = pd.Series(u_list)
     boroughs_mean_pos = boroughs_mean_pos.append(u_list, ignore_index=True)
 
-# print (boroughs_mean_pos)
+print (boroughs_mean_pos)
 
 # Make a request and convert it to json data
 ###############################################################
@@ -216,81 +219,107 @@ for borough in geo_df['Borough'].unique():
 # latTO = geo_df.iloc[0]['Latitude']
 # latTO = 43.727        # --> Real Center
 # lonTO = -79.373       # --> Real Center
+
 latTO = 43.6813         # --> Old city Center
 lonTO = -79.4003        # --> Old city Center
 locationTO = str(str(latTO) + ',' + str(lonTO))
-
-
-coffeeTO = Link(option='search', location=locationTO, query='coffee').venue(radius=5000,limit=80) # radius in meters?
-libraryTO = Link(option='search', location=locationTO, query='library').venue(radius=5000,limit=80) # radius in meters?
-studyTO = Link(option='search', location=locationTO, query='study').venue(radius=5000,limit=80) # radius in meters?
-
-df_coffee = get_df(coffeeTO)
-df_library = get_df(libraryTO)
-df_study = get_df(studyTO)
-
-
-# Pandas data preparing:
-#################################################################
-# keep only columns that include venue name, and anything that is associated with location
-df_coffee = filter_df(df_coffee)
-df_library = filter_df(df_library)
-df_study = filter_df(df_study)
-
-# filter the category for each row
-df_coffee['categories'] = df_coffee.apply(get_category_type, axis=1)
-df_library['categories'] = df_library.apply(get_category_type, axis=1)
-df_study['categories'] = df_study.apply(get_category_type, axis=1)
-
 # generate map centered on the middle of Toronto:
 #################################################################
 mapTO = folium.Map(location=[latTO, lonTO], zoom_start=12)
 
-# instantiate a feature group for the incidents in the dataframe
-coffees = folium.map.FeatureGroup()
-libraries = folium.map.FeatureGroup()
-studies = folium.map.FeatureGroup()
+i=0
 
-# loop through the coffees
-for latitude, longitude, in zip(df_coffee.lat, df_coffee.lng):
-    coffees.add_child(
-        folium.CircleMarker(
-            [latitude, longitude],
-            radius=5, # define how big you want the circle markers to be
-            color='black',
-            fill=True,
-            fill_color='blue',
-            fill_opacity=0.6
-        )
-    )
-# loop through the libraries
-for latitude, longitude, in zip(df_library.lat, df_library.lng):
-    libraries.add_child(
-        folium.CircleMarker(
-            [latitude, longitude],
-            radius=5, # define how big you want the circle markers to be
-            color='black',
-            fill=True,
-            fill_color='red',
-            fill_opacity=0.6
-        )
-    )
-# loop through the studies
-for latitude, longitude, in zip(df_study.lat, df_study.lng):
-    studies.add_child(
-        folium.CircleMarker(
-            [latitude, longitude],
-            radius=5, # define how big you want the circle markers to be
-            color='black',
-            fill=True,
-            fill_color='green',
-            fill_opacity=0.6
-        )
-    )
+for pos in (boroughs_mean_pos['Position']):
 
-mapTO.add_child(coffees)
-mapTO.add_child(libraries)
-mapTO.add_child(studies)
+    print ('i=',i)
+    # cafeine = Link(option='search', location=pos, query='coffee').venue(radius=5000,limit=80) # radius in meters?
+    # print (cafeine)
+
+    coffeeTO = Link(option='search', location=pos, query='coffee').venue(radius=5000,limit=80) # radius in meters?
+    libraryTO = Link(option='search', location=pos, query='library').venue(radius=5000,limit=80) # radius in meters?
+    studyTO = Link(option='search', location=pos, query='study').venue(radius=5000,limit=80) # radius in meters?
+
+    df_coffee = get_df(coffeeTO)
+    df_library = get_df(libraryTO)
+    df_study = get_df(studyTO)
+
+
+    # Pandas data preparing:
+    #################################################################
+    # keep only columns that include venue name, and anything that is associated with location
+    try:
+        # filter the category for each row
+        df_coffee = filter_df(df_coffee)
+        df_coffee['categories'] = df_coffee.apply(get_category_type, axis=1)
+
+        # instantiate a feature group for matches in the dataframe
+        coffees = folium.map.FeatureGroup()
+        for latitude, longitude, in zip(df_coffee.lat, df_coffee.lng):
+            libraries.add_child(
+                folium.CircleMarker(
+                    [latitude, longitude],
+                    radius=5, # define how big you want the circle markers to be
+                    color='black',
+                    fill=True,
+                    fill_color='red',
+                    fill_opacity=0.6
+                )
+            )
+    except Exception as e:
+        print (df_coffee.head())
+        print (e)
+        pass
+
+
+
+    try:
+        df_library = filter_df(df_library)
+        df_library['categories'] = df_library.apply(get_category_type, axis=1)
+        libraries = folium.map.FeatureGroup()
+        for latitude, longitude, in zip(df_library.lat, df_library.lng):
+            libraries.add_child(
+                folium.CircleMarker(
+                    [latitude, longitude],
+                    radius=5, # define how big you want the circle markers to be
+                    color='black',
+                    fill=True,
+                    fill_color='blue',
+                    fill_opacity=0.6
+                )
+            )
+    except Exception as e:
+        print (df_library.head())
+        print (e)
+        pass
+
+
+
+    try:
+        df_study = filter_df(df_study)
+        df_study['categories'] = df_study.apply(get_category_type, axis=1)
+        studies = folium.map.FeatureGroup()
+        for latitude, longitude, in zip(df_study.lat, df_study.lng):
+            studies.add_child(
+                folium.CircleMarker(
+                    [latitude, longitude],
+                    radius=10, # define how big you want the circle markers to be
+                    color='black',
+                    fill=True,
+                    fill_color='green',
+                    fill_opacity=0.6
+                )
+            )
+    except Exception as e:
+        print (df_study.head())
+        print (e)
+        pass
+
+    i+=1
+
+    mapTO.add_child(coffees)
+    mapTO.add_child(libraries)
+    mapTO.add_child(studies)
+
 mapTO.save('index.html')
 
 
