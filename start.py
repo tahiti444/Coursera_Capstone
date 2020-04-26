@@ -178,6 +178,36 @@ geo_df = geo_df.rename(columns={'Postal Code': 'PostalCode'})
 geo_df = df.merge(geo_df, how='outer', on='PostalCode')
 # print (geo_df)
 
+# Get a DataFrame from the mean position of boroughs in Toronto:
+#################################################################
+'''
+Procedure:
+
+    - try to group positions from geo_df for every Borough
+    - find the mean lat and lng from each
+    - do a search from every Borough
+'''
+u_list = {
+    'Borough': '',
+    'Latitude': 0.0,
+    'Longitude': 0.0
+}
+boroughs_mean_pos = pd.DataFrame(columns=u_list)
+for borough in geo_df['Borough'].unique():
+    df_inter = geo_df[(geo_df['Borough']==borough)]
+    # u_list = (x, y, z) x=borough, y=latitude, z=longitude
+    x=borough
+    y=df_inter['Latitude'].mean()
+    z=df_inter['Longitude'].mean()
+    u_list = {
+        'Borough': x,
+        'Latitude': y,
+        'Longitude': z
+    }
+    u_list = pd.Series(u_list)
+    boroughs_mean_pos = boroughs_mean_pos.append(u_list, ignore_index=True)
+
+# print (boroughs_mean_pos)
 
 # Make a request and convert it to json data
 ###############################################################
