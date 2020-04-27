@@ -94,8 +94,6 @@ import re
 Commented out after saving dataframe!
 '''
 
-df = pd.read_csv('./data/loc_cities_germany.csv', usecols={'City', 'State', 'Latitude', 'Longitude', 'Position'})
-print(df)
 
 # Find geocenter of Germany
 geolocator = Nominatim(user_agent='aiFinder')
@@ -162,6 +160,7 @@ class Link:
 #################################################################
 # function to avoid generating testing variables of json indenxed files (only for test):
 def view_json(var):
+    var = requests.get(var).json()
     var = json.dumps(var, sort_keys=True, indent=2)
     return print (var)
 
@@ -216,24 +215,66 @@ version = str(20180602)
 main_URL = 'https://api.foursquare.com/v2/'
 
 
-
-# print (df)
-
-# for pos in ()
+df = pd.read_csv('./data/loc_cities_germany.csv', usecols={'City', 'State', 'Latitude', 'Longitude', 'Position'})
+# print(df)
 
 
+i=0
+
+'''
+Explore json:
+    + [categories][name]:
+        - campaign office
+        - start up
+        - office
+    + [name]:
+        - <contains> GmbH    
+                        
+# datascienceGE = Link(option='search', location=df['Position'].iloc[0], query='data science').venue(radius=5000,limit=80) # radius in meters?
+# print (view_json(datascienceGE))
+'''
 
 
+for pos in (df['Position']):
+
+    # print ('i=',i)        # uncomment to check whether the error is
+
+    datascienceGE = Link(option='search', location=pos, query='data science').venue(radius=5000,limit=80) # radius in meters?
+
+    df_DSGE = get_df(datascienceGE)
+
+    try:
+        # filter the category for each row
+        df_DSGE = filter_df(df_DSGE)
+        df_DSGE['categories'] = df_DSGE.apply(get_category_type, axis=1)
+
+        # instantiate a feature group for matches in the dataframe
+        dataSci = folium.map.FeatureGroup()
+        for latitude, longitude, in zip(df_DSGE.lat, df_DSGE.lng):
+            dataSci.add_child(
+                folium.CircleMarker(
+                    [latitude, longitude],
+                    radius=5, # define how big you want the circle markers to be
+                    color='black',
+                    fill=True,
+                    fill_color='red',
+                    fill_opacity=0.6
+                )
+            )
+        mapGE.add_child(dataSci)
+        print ('{}: This city has {} results'.format(df['City'].iloc[i], df_DSGE.shape[0]))
+    except Exception as e:
+        print ('{}: This city has no results for data science'.format(df['City'].iloc[i]))
+        print (e)
+
+        pass
+
+    # df_DSGE.to_csv('./data/df_DSGE.csv')
+    # break
+
+    i+=1
 
 
-
-
-
-
-
-
-
-
-# mapGE.save('germany.html')
+mapGE.save('germany.html')
 
 
