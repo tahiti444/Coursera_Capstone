@@ -1,22 +1,36 @@
-# Main Program
+# Main Program 
+# 29.04.20 DGM:         Program's opening
+
 ''' 
+ATTENTION to use this program:
+    - you might want to overwrite in Globals Initialization:
+        + client_id = <your ID>
+        + client_secret = <your ID Key>
+        YOU CAN ALSO: create a json file named: 'credentials.json' on the same folder and write:
+        {
+            'client_id': <your ID>,
+            'client_secret': '<your ID Key>
+        }
+    - you may also want to actualize the cities DataFrame and uncomment the rows at the very beginning of this program
+
+GOAL: 
+    - Retrieve the actual companies' locations and plot them to a map to find out which companies about your sector in your surroundings you have, 
+    in which city you should move to for this, etc. Feel free to change these queries and places to match your needs.
+
+##################
+PROCEDURE
+##################
 Retrieving data from foursquare's API:
-    - https://api.foursquare.com/V2/venues
-                                    /users
-                                    /tips
     - needs to pass:
         + Class Link
-    - Read from external json file API_ID_Keys
-    - Exercise: Load data from Neighborhoods and mathing them with postal codes
-    - Request to FS API about:
-        + Coffee
-        + Library
-        + study
-        + party (optional)
-    - transform request into json format
+    - Read from external json Foursquare API:
+        + Load data from cities in Germany and matching them with queries
+    - Request to FouSquare API about:
+        + Data Science
+        + Data Mining
+        + Data Analysis
     - generatation of a map
-
-    TODO: Build a cluster
+##################
 '''
 
 from pathlib import Path
@@ -39,6 +53,10 @@ import folium # plotting library
 
 # regex
 import re
+
+'''
+Uncomment if want to actualize cities
+'''
 
 # url = 'https://en.wikipedia.org/wiki/List_of_cities_in_Germany_by_population'
 
@@ -94,20 +112,17 @@ import re
 Commented out after saving dataframe!
 '''
 
-
 # Find geocenter of Germany
 geolocator = Nominatim(user_agent='aiFinder')
 location = geolocator.geocode('Germany')
-# print (location.latitude, location.longitude)
-
 
 latGE = location.latitude           # --> Center
 lonGE = location.longitude          # --> Center
 locationGE = str(str(latGE) + ',' + str(lonGE))
+
 # generate map centered on the middle of Germany:
 #################################################################
 mapGE = folium.Map(location=[latGE, lonGE], zoom_start=7)
-
 
 # Get credentials from json file
 #########################################################################
@@ -160,9 +175,11 @@ class Link:
 #################################################################
 # function to avoid generating testing variables of json indenxed files (only for test):
 def view_json(var):
+    # r=requests.get("http://www.example.com/", headers={"content-type":"text"})
     var = requests.get(var).json()
     var = json.dumps(var, sort_keys=True, indent=2)
     return print (var)
+
 
 # function that extracts the category of the venue
 def get_category_type(row):
@@ -175,6 +192,7 @@ def get_category_type(row):
         return None
     else:
         return categories_list[0]['name']
+
 
 # function to pass a link and get a request and a json data out of it
 def get_df(link):
@@ -194,6 +212,7 @@ def get_df(link):
     # print (df.head())
     return dataframe
 
+
 # keep only columns that include venue name, and anything that is associated with location
 def filter_df(dataframe):
     filtered_columns = ['name', 'categories'] + [col for col in dataframe.columns if col.startswith('location.')] + ['id']
@@ -207,74 +226,127 @@ def filter_df(dataframe):
 # read json file and save it
 id_key = readFile('credentials.json')
 id_key = json.loads(id_key)
+
 # inizializate id credentials
 client_id = id_key["client_id"]
 client_secret = id_key["client_secret"]
 version = str(20180602)
+
 # object for URL from foursquare's API
 main_URL = 'https://api.foursquare.com/v2/'
 
-
+# TODO: limit the data frame 'df' to a distance with 'me' and drop the rest
+#Read Dataframe from CSV
 df = pd.read_csv('./data/loc_cities_germany.csv', usecols={'City', 'State', 'Latitude', 'Longitude', 'Position'})
-# print(df)
-
 
 i=0
-
-'''
-Explore json:
-    + [categories][name]:
-        - campaign office
-        - start up
-        - office
-    + [name]:
-        - <contains> GmbH    
-                        
-# datascienceGE = Link(option='search', location=df['Position'].iloc[0], query='data science').venue(radius=5000,limit=80) # radius in meters?
-# print (view_json(datascienceGE))
-'''
-
-
 for pos in (df['Position']):
 
-    # print ('i=',i)        # uncomment to check whether the error is
-
-    datascienceGE = Link(option='search', location=pos, query='data science').venue(radius=5000,limit=80) # radius in meters?
-
-    df_DSGE = get_df(datascienceGE)
+    # Generate links for different query types out of Foursquare
+    datascienceGE = Link(option='search', location=pos, query='data science').venue(radius=50000,limit=80, categoryId='4d4b7105d754a06375d81259') 
+    dataminingGE = Link(option='search', location=pos, query='data mining').venue(radius=50000,limit=80, categoryId='4d4b7105d754a06375d81259') 
+    dataanalysisGE = Link(option='search', location=pos, query='data analysis').venue(radius=50000,limit=80, categoryId='4d4b7105d754a06375d81259') 
 
     try:
+        # convert first to json and secondly to pandas DataFrame
+        df_DSGE = get_df(datascienceGE)
         # filter the category for each row
         df_DSGE = filter_df(df_DSGE)
         df_DSGE['categories'] = df_DSGE.apply(get_category_type, axis=1)
 
         # instantiate a feature group for matches in the dataframe
         dataSci = folium.map.FeatureGroup()
-        for latitude, longitude, in zip(df_DSGE.lat, df_DSGE.lng):
+        for latitude, longitude, companyname in zip(df_DSGE.lat, df_DSGE.lng, df_DSGE.name):
             dataSci.add_child(
+                # Add markers to the map for every match
                 folium.CircleMarker(
                     [latitude, longitude],
-                    radius=5, # define how big you want the circle markers to be
-                    color='black',
+                    radius=7, # define how big you want the circle markers to be
+                    color='yellow',
                     fill=True,
                     fill_color='red',
                     fill_opacity=0.6
                 )
             )
+            dataSci.add_child(
+                # add simple popup with the name of the company when clicked
+                folium.Marker(
+                    location=[latitude, longitude],
+                    icon=None,
+                    popup=companyname,
+                )
+            )
         mapGE.add_child(dataSci)
-        print ('{}: This city has {} results'.format(df['City'].iloc[i], df_DSGE.shape[0]))
+        print ('{}: This city has {} results for data science'.format(df['City'].iloc[i], df_DSGE.shape[0]))
     except Exception as e:
-        print ('{}: This city has no results for data science'.format(df['City'].iloc[i]))
-        print (e)
-
+        print ('E1000: {}, {}: This city has no results for data science'.format(e, df['City'].iloc[i]))
         pass
 
-    # df_DSGE.to_csv('./data/df_DSGE.csv')
-    # break
+    try:
+        df_DMGE = get_df(dataminingGE)
 
+        df_DMGE = filter_df(df_DMGE)
+        df_DMGE['categories'] = df_DMGE.apply(get_category_type, axis=1)
+
+        dataMin = folium.map.FeatureGroup()
+        for latitude, longitude, companyname in zip(df_DMGE.lat, df_DMGE.lng, df_DMGE.name):
+            dataMin.add_child(
+                folium.CircleMarker(
+                    [latitude, longitude],
+                    radius=7,
+                    color='yellow',
+                    fill=True,
+                    fill_color='green',
+                    fill_opacity=0.6
+                )
+            )
+            dataMin.add_child(
+                folium.Marker(
+                    location=[latitude, longitude],
+                    icon=None,
+                    popup=companyname,
+                )
+            )
+        mapGE.add_child(dataMin)
+        print ('{}: This city has {} results for data mining'.format(df['City'].iloc[i], df_DMGE.shape[0]))
+    except Exception as e:
+        print ('E1000: {}, {}: This city has no results for data mining'.format(e, df['City'].iloc[i]))
+        pass
+
+    try:
+        df_DAGE = get_df(dataanalysisGE)
+
+        df_DAGE = filter_df(df_DAGE)
+        df_DAGE['categories'] = df_DAGE.apply(get_category_type, axis=1)
+
+        dataAna = folium.map.FeatureGroup()
+        for latitude, longitude, companyname in zip(df_DAGE.lat, df_DAGE.lng, df_DAGE.name):
+            dataAna.add_child(
+                folium.CircleMarker(
+                    [latitude, longitude],
+                    radius=7,
+                    color='yellow',
+                    fill=True,
+                    fill_color='blue',
+                    fill_opacity=0.6
+                )
+            )
+            dataAna.add_child(
+                folium.Marker(
+                    location=[latitude, longitude],
+                    icon=None,
+                    popup=companyname,
+                )
+            )
+        mapGE.add_child(dataAna)
+        print ('{}: This city has {} results for data analysis'.format(df['City'].iloc[i], df_DAGE.shape[0]))
+    except Exception as e:
+        print ('E1000: {}, {}: This city has no results for data analysis'.format(e, df['City'].iloc[i]))
+        pass
     i+=1
 
-
+# Save the map with a file
+# TIP: it opens with file://<absolute path>/germany.html in your browser
 mapGE.save('germany.html')
 
 
