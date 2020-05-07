@@ -243,9 +243,9 @@ i=0
 for pos in (df['Position']):
 
     # Generate links for different query types out of Foursquare
-    datascienceGE = Link(option='search', location=pos, query='data science').venue(radius=50000,limit=80, categoryId='4d4b7105d754a06375d81259') 
-    dataminingGE = Link(option='search', location=pos, query='data mining').venue(radius=50000,limit=80, categoryId='4d4b7105d754a06375d81259') 
-    dataanalysisGE = Link(option='search', location=pos, query='data analysis').venue(radius=50000,limit=80, categoryId='4d4b7105d754a06375d81259') 
+    datascienceGE = Link(option='search', location=pos, query='\"data science\"').venue(radius=50000,limit=80) 
+    dataminingGE = Link(option='search', location=pos, query='\"data mining\"').venue(radius=50000,limit=80) 
+    dataanalysisGE = Link(option='search', location=pos, query='\"data analysis\"').venue(radius=50000,limit=80) 
 
     try:
         # convert first to json and secondly to pandas DataFrame
