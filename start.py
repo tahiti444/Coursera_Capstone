@@ -255,7 +255,7 @@ for pos in (boroughs_mean_pos['Position']):
         # instantiate a feature group for matches in the dataframe
         coffees = folium.map.FeatureGroup()
         for latitude, longitude, in zip(df_coffee.lat, df_coffee.lng):
-            libraries.add_child(
+            coffees.add_child(
                 folium.CircleMarker(
                     [latitude, longitude],
                     radius=5, # define how big you want the circle markers to be
