@@ -35,5 +35,8 @@ dependencies:
   # - ipython_genutils=0.1
   - geopy=1.21
   - geographiclib
-  - pylint=2.4.4
+  - pylint=2.4
+
+  - pytest=7.1
+  - black=19
 
