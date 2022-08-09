@@ -1,10 +1,11 @@
-test:
-	# some asserts here
+mytest:
+	pytest -s test.py --disable-warnings
 
 pretty:
-	black test.py 
+	black test.py ./classes/*
 
 clean:
-	rm -rf ./classes/__pycache__ 
+	rm -rf ./*/__pycache__ 
+	rm -rf ./__pycache__
 
-check: pretty clean
+check: mytest clean pretty

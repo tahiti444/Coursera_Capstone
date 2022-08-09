@@ -67,63 +67,6 @@ import matplotlib.pyplot as plt
 # regex
 import re
 
-'''
-Uncomment if want to actualize cities
-'''
-
-# url = 'https://en.wikipedia.org/wiki/List_of_cities_in_Germany_by_population'
-
-# series_df = pd.read_html(url, encoding='utf_16')
-# # series_df = pd.read_html(url)
-# df = series_df[0]
-# df = df.drop(labels={'2015rank', '2015estimate', 'Change', '2011census', '2015land area', '2015populationdensity'}, axis=1)
-
-# location_columns = df['Location'].str.split(pat="/", expand=True).rename(columns={0: 'cardLocation', 1: 'dLocation'})
-# location_columns2 = location_columns['dLocation'].str.split(pat="°N", expand=True)
-# location_columns2 = location_columns2.rename(columns={0: 'Latitude', 1: 'Longitude'})
-
-# try:
-#     location_columns2['Latitude'] = location_columns2['Latitude'].astype(float)
-#     print ('converted to float')
-# except Exception as e:
-#     print (e)
-#     print ('Trying to decode...')
-#     location_columns2['Latitude'] = location_columns2['Latitude'].str.replace(u' \ufeff', u'')
-#     location_columns2['Latitude'] = location_columns2['Latitude'].astype(float)
-#     print('final data type from {} is {}'.format(location_columns2['Latitude'].name, location_columns2['Latitude'].dtypes))
-
-# try:
-#     location_columns2['Longitude'] = location_columns2['Longitude'].astype(float)
-#     print ('converted to float')
-# except Exception as e:
-#     print (e)
-#     print ('Trying to decode...')
-#     location_columns2['Longitude'] = location_columns2['Longitude'].str.replace(u' \ufeff', u'')
-#     location_columns2['Longitude'] = location_columns2['Longitude'].str.replace(u'°E', u'')
-#     location_columns2['Longitude'] = location_columns2['Longitude'].astype(float)
-#     print('final data type from {} is {}'.format(location_columns2['Longitude'].name, location_columns2['Longitude'].dtypes))
-
-# df = pd.concat([df, location_columns2], axis=1)
-# df = df.drop(labels={'Location'}, axis=1)
-
-# position = pd.DataFrame(columns={'Position'})
-# my_dict = {
-#     'Position': ''
-# }
-# for idx in df.index:
-#     string = str(round(df['Latitude'].iloc[idx], ndigits=3)) + ',' + str(round(df['Longitude'].iloc[idx], ndigits=3))
-#     my_dict = {
-#         'Position': string
-#     }
-#     position = position.append(my_dict, ignore_index=True)
-
-# df = pd.concat([df, position], axis=1)
-
-# df.to_csv('./data/loc_cities_germany.csv')
-
-'''
-Commented out after saving dataframe!
-'''
 
 # Find geocenter of Germany
 geolocator = Nominatim(user_agent='aiFinder')
