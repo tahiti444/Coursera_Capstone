@@ -1,0 +1,39 @@
+# Libraries for Data Manipulation
+# 	+ Pandas	--> Data Frames (columns and rows)
+# 	+ NumPy	--> Arrays and Matrices
+# 	+ SciPy	--> Integrals, differential eq., optimization...
+# Visualization Libraries
+# 	+ Matplotlib	--> plots and graphs
+# 	+ Seaborn	--> plots, time series, violin plots
+#   + WordCloud --> plot a word-representation
+# Maschine Learning Libraries
+# 	+ Scikit-learn	--> Machine Learning: Regression, classification,...
+# 	+ Statsmodels	--> Explore data, estimate statistical models, perform statistical tests  
+
+
+name: ./.env
+prefix: ./.env
+channels: 
+  - anaconda
+  - conda-forge
+  - contango
+dependencies:
+  - python=3.7
+  - numpy=1.17
+  - matplotlib=3.1
+  - numpy=1.17
+  - pandas=0.25
+  - scikit-learn=0.22
+  - scipy=1.4
+  - seaborn=0.9
+
+  - folium=0.10
+  # - sklearn=0.0
+  - wordcloud=1.6
+
+  - ipython=7.11
+  # - ipython_genutils=0.1
+  - geopy=1.21
+  - geographiclib
+  - pylint=2.4.4
+

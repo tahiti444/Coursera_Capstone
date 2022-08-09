@@ -1,0 +1,3 @@
+conda env create -p ./.env --file ./src/aienv.yml
+conda activate ./.env
+conda env update -p ./.env --file ./src/aienv.yml

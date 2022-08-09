@@ -2,44 +2,44 @@
 # 29.04.20 DGM:         Program's opening
 
 ''' 
-ATTENTION to use this program:
-    - you might want to overwrite in Globals Initialization:
-        + client_id = <your ID>
-        + client_secret = <your ID Key>
-        YOU CAN ALSO: create a json file named: 'credentials.json' on the same folder and write:
-        {
-            'client_id': <your ID>,
-            'client_secret': '<your ID Key>
-        }
-    - you may also want to actualize the cities DataFrame and uncomment the rows at the very beginning of this program
-    - AFTER Running program should be two maps created in html format!:
-        ('popupmap.html')
-        ('chorobusiness.html')
-        ('choroschool.html')
+    ATTENTION to use this program:
+        - you might want to overwrite in Globals Initialization:
+            + client_id = <your ID>
+            + client_secret = <your ID Key>
+            YOU CAN ALSO: create a json file named: 'credentials.json' on the same folder and write:
+            {
+                'client_id': <your ID>,
+                'client_secret': '<your ID Key>
+            }
+        - you may also want to actualize the cities DataFrame and uncomment the rows at the very beginning of this program
+        - AFTER Running program should be two maps created in html format!:
+            ('./res/popupmap.html')
+            ('./res/chorobusiness.html')
+            ('./res/choroschool.html')
 
-GOAL: 
-    - Retrieve the actual companies' locations and plot them to a map to find out which companies about your sector in your surroundings you have, 
-    in which city you should move to for this, etc. Feel free to change these queries and places to match your needs.
-    - Cluster this information per states and generate choroplets to visualize wich country region is the most suitable for you
+    GOAL: 
+        - Retrieve the actual companies' locations and plot them to a map to find out which companies about your sector in your surroundings you have, 
+        in which city you should move to for this, etc. Feel free to change these queries and places to match your needs.
+        - Cluster this information per states and generate choroplets to visualize wich country region is the most suitable for you
 
-##################
-PROCEDURE
-##################
-Retrieving data from foursquare's API:
-    - needs to pass:
-        + Class Link
-    - Read from external json Foursquare API:
-        + Load data from cities in Germany and matching them with queries
-    - Request to FouSquare API about:
-        + Data Science
-        + Data Mining
-        + Data Analysis
-Generatation of a map popping companies' names
-Generation of clusters
-Generation of maps showing clusters (choropleths)
-Generation of statistics and graphs for visualization
+    ##################
+    PROCEDURE
+    ##################
+    Retrieving data from foursquare's API:
+        - needs to pass:
+            + Class Link
+        - Read from external json Foursquare API:
+            + Load data from cities in Germany and matching them with queries
+        - Request to FouSquare API about:
+            + Data Science
+            + Data Mining
+            + Data Analysis
+    Generatation of a map popping companies' names
+    Generation of clusters
+    Generation of maps showing clusters (choropleths)
+    Generation of statistics and graphs for visualization
 
-##################
+    ##################
 '''
 
 from pathlib import Path
@@ -249,7 +249,7 @@ def readJson(path):
 # Globals initialization
 #########################################################################
 # read json file and save it
-id_key = readFile('credentials.json')
+id_key = readFile('./usr/credentials.json')
 id_key = json.loads(id_key)
 
 # inizializate id credentials
@@ -315,16 +315,20 @@ bundeslaender_DE = [
     "Thüringen",
 ]
 
-geojson = readJson('data/test.json')
+geojson = readJson('data/delimiters.json')
 total = pd.DataFrame()    
+
+query1 = input("Enter your wanted keyword, eg data science: ")
+query2 = input("Enter your wanted keyword, eg data mining: ")
+query3 = input("Enter your wanted keyword, eg data analysis: ")
 
 
 for pos in (df['Position']):
 
     # Generate links for different query types out of Foursquare
-    datascienceGE = Link(option='search', location=pos, query='\"data science\"').venue(radius=50000,limit=80) 
-    dataminingGE = Link(option='search', location=pos, query='\"data mining\"').venue(radius=50000,limit=80) 
-    dataanalysisGE = Link(option='search', location=pos, query='\"data analysis\"').venue(radius=50000,limit=80) 
+    datascienceGE = Link(option='search', location=pos, query='\"' + query1 + '\"').venue(radius=50000,limit=80) 
+    dataminingGE = Link(option='search', location=pos, query='\"' + query2 + '\"').venue(radius=50000,limit=80) 
+    dataanalysisGE = Link(option='search', location=pos, query='\"' + query3 + '\"').venue(radius=50000,limit=80) 
 
     try:
         # convert first to json and secondly to pandas DataFrame
@@ -376,9 +380,9 @@ for pos in (df['Position']):
                 )
             )
         mapGE.add_child(dataSci)
-        print ('{}: This city has {} results for data science'.format(df['City'].iloc[i], df_DSGE.shape[0]))
+        print ('{}: This city has {} results for {}'.format(df['City'].iloc[i], df_DSGE.shape[0], query1))
     except Exception as e:
-        print ('E1000: {}, {}: This city has no results for data science'.format(e, df['City'].iloc[i]))
+        print ('E1000: {}, {}: This city has no results for {}'.format(e, df['City'].iloc[i], query1))
         pass
 
     try:
@@ -417,9 +421,9 @@ for pos in (df['Position']):
                 )
             )
         mapGE.add_child(dataMin)
-        print ('{}: This city has {} results for data mining'.format(df['City'].iloc[i], df_DMGE.shape[0]))
+        print ('{}: This city has {} results for {}'.format(df['City'].iloc[i], df_DMGE.shape[0], query2))
     except Exception as e:
-        print ('E1000: {}, {}: This city has no results for data mining'.format(e, df['City'].iloc[i]))
+        print ('E1000: {}, {}: This city has no results for {}'.format(e, df['City'].iloc[i], query2))
         pass
 
     try:
@@ -458,9 +462,9 @@ for pos in (df['Position']):
                 )
             )
         mapGE.add_child(dataAna)
-        print ('{}: This city has {} results for data analysis'.format(df['City'].iloc[i], df_DAGE.shape[0]))
+        print ('{}: This city has {} results for {}'.format(df['City'].iloc[i], df_DAGE.shape[0], query3))
     except Exception as e:
-        print ('E1000: {}, {}: This city has no results for data analysis'.format(e, df['City'].iloc[i]))
+        print ('E1000: {}, {}: This city has no results for {}'.format(e, df['City'].iloc[i], query3))
         pass
     i+=1
 
@@ -589,9 +593,9 @@ folium.Choropleth(
 ).add_to(choro_studyGE)
 
 # html file creation
-mapGE.save('popupmap.html')
-choro_businessGE.save('chorobusiness.html')
-choro_studyGE.save('choroschool.html')
+mapGE.save('./res/popupmap.html')
+choro_businessGE.save('./res/chorobusiness.html')
+choro_studyGE.save('./res/choroschool.html')
 
 
 # plots:
@@ -619,7 +623,7 @@ ax = plot_business.plot(
     # rot=30
 )
 # Set 
-ax.set_title('Anzahl der Firmen, die beschaeftig in Data Science sind',fontsize=20)
+ax.set_title('Anzahl der Firmen, die beschaeftig in ' + query1 + ' sind',fontsize=20)
 ax.set_xlabel('Bundeslaender',fontsize=14)
 ax.set_ylabel('Prozent', fontsize=14)
 # remove axes:
@@ -663,7 +667,7 @@ ax = plot_study.plot(
     # rot=30
 )
 # Set 
-ax.set_title('Anzahl der Bildungsstaette, die beschaeftig in Data Science sind',fontsize=20)
+ax.set_title('Anzahl der Bildungsstaette, die beschaeftig in ' + query2 + ' sind',fontsize=20)
 ax.set_xlabel('Bundeslaender',fontsize=14)
 ax.set_ylabel('Prozent', fontsize=14)
 # remove axes:
